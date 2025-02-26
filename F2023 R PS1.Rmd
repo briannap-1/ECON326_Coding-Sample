@@ -1,0 +1,210 @@
+---
+title: "ECON 326 HW 1 R Supplement"
+author: "Brianna Penkala"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message = FALSE}
+library(haven); library(table1); library(jtools);library(huxtable); library(tidyverse)
+```
+
+```{r, message = FALSE}
+gender <- read_dta("/Users/briannapenkala/Downloads/R/Datasets/gender.dta")
+nlsy <- read_dta("/Users/briannapenkala/Downloads/R/Datasets/nlsy.dta")
+```
+
+# Topic 3
+
+## Question 1
+
+```{r}
+t.test(gender$wage, mu = 12)
+```
+
+A. The null hypothesis for this t-test is that the average hourly wage is equal to $12. 
+
+B. The t-statistic is 1.4239. 
+
+C. The p-value is .1548 which is greater than 5% meaning we cannot reject the null hypothesis and it is not statistically significant. 
+
+D. The confidence interval is 11.84438-12.97852 which is the range that we can expect the estimate to fall between 95% of the time.
+
+
+
+## Question 2
+
+```{r}
+t.test(gender$wage~gender$gender)
+```
+
+A. The null hypothesis is that there is no difference between the wage of men and women. 
+
+B. The t-statistic is 5.8418 and the p-value is 7.288e-09. 
+
+C. This p-value is much smaller than the 5% significance level so it is statistically significant and we can reject the null-hypothesis. 
+
+## Question 3
+
+
+The rejection of the null hypothesis shows there is evidence for a difference between the wages of men and women but this does not prove there is a difference. Other factors must be considered. The p-value states that there is a 7.288e-09 chance that our null hypothesis can occur, which is very unlikely. 
+
+## Topic 4
+
+
+## Question 1
+
+```{r}
+plot(gender$educ, gender$wage)
+```
+```{r}
+#The first line establishes the dataset and the variables being used
+ggplot(gender, aes(x= educ, y = wage))+
+  #This next line indicates the type of graph (scatterplot), and allows for customization on size, shape, and color of the points in the graph
+  geom_point(size = 1, col = "navy") +
+  #This next line adds in a line for the linear regression model on top of the existing scatterplot
+  geom_smooth(method = "lm", color = "red")+
+  #This next line allows for customization of the overall and axis titles
+  labs(title = "Wage vs. Education", x= "Years of Education", y = "Hourly Wage Earned")
+  
+```
+
+
+## Question 2
+
+Based on this figure we can conclude that there is a positive correlation between education and wages. Therefore, more education is associated with a higher wage. 
+
+## Question 3
+
+```{r}
+summary(lm(gender$wage ~ gender$educ))
+```
+
+A. SRF: wage = β0 + β1(education) + 𝓔 (not sure how to format correctly on here, i would have added the hats since it is a sample, also the subscript i)
+
+B. A one unit increase in education is associated with a 1.32329 unit increase in wage on average. This does match the finding in question 2 where I determined that education and wage had a positive correlation. 
+
+C. β1 is statistically significant because the p-value is less than 5%. This means we can reject the null hypothesis.
+
+D. This implies that an increase in educational attainment will result in an increase in wages. There is clearly a positive correlation between more education and a higher wage, but this does not equal causation. 
+
+E. The value of β0 is -4.91523 which means that when the level of education = 0, the wage = -4.91523. This is not meaningful since you cannot earn a negative wage. 
+
+F. Ŷ = -4.91523 + 1.32329(12)
+   Ŷ = 10.96425
+The predicted wage for a person with 12 years of education is $10.96.
+
+## Question 4
+
+```{r}
+gender$yhat <- predict(lm(gender$wage ~ gender$educ))
+#part a
+mean(gender$yhat)
+#part b
+gender %>%
+  filter(educ == 12)%>%
+  summary()
+#Alternate code for part b
+gender2 <- gender %>%
+  filter(educ == 12)
+mean(gender2$yhat)
+
+```
+
+A. The mean of 12.41145 was seen in part 3 question 1, representing the average wage in the data set. This means that the average predicted wage based on education is the same as the average wage.  
+
+B. The mean of 10.96 was seen in the predicted hourly wage for a person with 12 years of education. This makes sense because filtering the data to only include those with 12 years of education will be the same as predicting the wage for someone with 12 years of education. 
+
+## Question 5
+
+```{r}
+gender$uhat <- residuals(lm(gender$wage ~ gender$educ))
+max(gender$uhat)
+summary(gender$uhat)
+```
+
+The largest residual in the data set is 64.14966. This means that this person has a wage about 64 units more than the predicted value for someone with their education level.
+
+```{r}
+summary(lm(gender$uhat ~ gender$educ))
+```
+This shows that running a regression of the residuals of wage on education, on education, fit the null hypothesis. Since the p-value is 1, it is extremely unlikely that the null hypothesis can be rejected in any case. This makes sense because the residuals of the regression of wage on education should not be different than the regression of those residuals on education. 
+
+# Topic 5
+
+## Question 1
+
+```{r}
+table1(~male+ white+black, data = nlsy)
+```
+
+
+The sample of 1000 people specifically measures how many are male, white, or black. The means for male, white, and black are .538, .857, and .0860 respectively. Since these variables are dummy variables, the means tell us that there are more males than females in the data set and more white people than black people. 
+
+## Question 2
+
+```{r}
+reg1 <- lm(income ~ educ + married, data = nlsy)
+summary(reg1)
+```
+
+A one unit increase in education is associated with a 33.705 unit increase in income on average, holding marital status constant. Also, being married is associated with a 46.955 unit increase in income on average, holding education constant. Neither of the p-values are statistically significant from 0 since they are both above 0. This means the null hypotheses cannot be rejected. The constant 474.129 represents income when the education level is 0 and they are not married. It can be considered meaningful since it is reasonable and not negative or a very small number. 
+
+## Question 3
+
+Dropout: Ŷ = 474.129 + 33.705(10) + 46.955(0)
+         Ŷ = 811.179
+         
+The unmarried person with 10 years of education has a predicted monthly income of $811.18.
+
+Educated: Ŷ = 474.129 + 33.705(16) + 46.955(1)
+          Ŷ = 1060.364
+          
+The married person with 16 years of education has a predicted monthly income of $1060.36. 
+
+## Question 4
+```{r}
+lm(income ~ black+white+hispanic, data = nlsy)
+```
+R will only provide coefficients for 2 of the 3 variables to avoid collinearity which will occur when the dummy variables always add up to the same constant. 
+
+## Question 5
+
+```{r}
+reg2 <- lm(income ~ black + hispanic, data = nlsy)
+summary(reg2)
+```
+
+According to the regression, being black is associated with a 76.74 unit decrease in income on average, holding being Hispanic constant. Additionally, being Hispanic is associated with a 42.25 unit decrease in income on average, holding being black constant. The black coefficient is slightly statistically significant at the 5% level since it is below 5% but the Hispanic coefficient is not since it is above 5%. 
+
+## Question 6
+
+```{r}
+summary(lm(income ~ hispanic, data = nlsy))
+```
+
+In this regression, the constant represents when the person is not Hispanic, being controlled for white. The constant of 891.58 shows the income of the omitted group (black), and the coefficient for Hispanic shows that being Hispanic is associated with a 35.25 unit decrease in income on average, holding being white constant. The p-value of the Hispanic variable shows that the income of Hispanic people is not statistically significant from that of black people since it is greater than 5%. 
+
+## Question 7
+
+```{r}
+m1 <- lm(income~educ, data = nlsy)
+m2 <- lm(income~educ+married, data = nlsy)
+m3 <- lm(income~educ+married+black+hispanic, data = nlsy)
+m4 <- lm(income~educ+married+black+hispanic+age, data = nlsy)
+export_summs(m1,m2,m3,m4, scale = TRUE)
+```
+
+## Question 8
+
+Omitting marriage generates an understatement on the effect of education on income. Omitting race/ethnicity generates an slight understatement on the effect of education on income. Omitting age generates a significant overstatement of the effect of education on income. 
+
+## Question 9
+
+Assuming that being married will increase income is incorrect because the correlation does not imply causation. There can be other factors involved in the relationship between income and marital status that are not addressed in the data, causing the illusion that being married will increase income. If the data in the nlsy set has accounted for all of these other factors, the senator can assume that being married will likely lead to higher income. However, because these other factors are not accounted for, and because of basic logic, he cannot assume that promoting marriage will raise incomes. 
